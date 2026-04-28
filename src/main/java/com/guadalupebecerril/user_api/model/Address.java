@@ -1,6 +1,7 @@
 package com.guadalupebecerril.user_api.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.databind.PropertyNamingStrategies;
+import com.fasterxml.jackson.databind.annotation.JsonNaming;
 import lombok.Data;
 
 /**
@@ -8,10 +9,10 @@ import lombok.Data;
  * Esta clase se utiliza para el mapeo de datos en la API de usuarios.
  */
 @Data
+@JsonNaming(PropertyNamingStrategies.SnakeCaseStrategy.class)
 public class Address {
     private Integer id;
     private String name;
     private String street;
-    @JsonProperty("country_code")
     private String countryCode;
 }

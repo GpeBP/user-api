@@ -1,8 +1,13 @@
 package com.guadalupebecerril.user_api;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+import java.util.List;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,60 +32,207 @@ public class UserServiceTest {
     void setUp() {
         userService = new UserService();
     }
+    // -------------------------------------------------------------------------
+    // saveUser
+    // -------------------------------------------------------------------------
 
-    /**
-     * Escenario: Registro exitoso de un usuario.
-     * Verifica que el sistema asigne IDs y mantenga la integridad de los datos
-     * cuando la entrada cumple con todas las reglas.
-     */
     @Test
-    void testSaveUser_Success() {
-        User user = new User();
-        user.setName("Test User");
-        user.setEmail("test@mail.com");
-        user.setTax_id("VAMI920425ABC");
-        user.setPhone("5512345678");
-        user.setPassword("password123");
+    void saveUser_validData_assignsIdAndTimestamp() {
+        User user = buildUser("VAMI920425ABC", "5512345678");
 
-        User savedUser = userService.saveUser(user);
+        User saved = userService.saveUser(user);
 
-        assertNotNull(savedUser.getId());
-        assertEquals("Test User", savedUser.getName());
+        assertNotNull(saved.getId());
+        assertNotNull(saved.getCreatedAt());
+        assertEquals("Test User", saved.getName());
     }
 
-    /**
-     * Escenario: Intento de registro con un RFC mal formado.
-     * Verifica que el sistema bloquee la persistencia y lance una excepción
-     */
     @Test
-    void testSaveUser_InvalidRFC_ShouldThrowException() {
-        User user = new User();
-        user.setTax_id("RFC-INVALIDO");
+    void saveUser_passwordIsHashed() {
+        User user = buildUser("VAMI920425ABC", "5512345678");
+        user.setPassword("secret123");
 
-        // Verificamos que lance la excepción 400
-        assertThrows(ResponseStatusException.class, () -> {
-            userService.saveUser(user);
-        });
+        User saved = userService.saveUser(user);
+
+        assertNotEquals("secret123", saved.getPassword());
     }
 
-    /**
-     * Escenario: Intento de inicio de sesión con credenciales erróneas.
-     * Valida que el proceso de autenticación rechace accesos con contraseñas
-     * incorrectas.
-     */
     @Test
-    void testLogin_Failure_WrongPassword() {
-        // Un usuario previamente registrado en el sistema
+    void saveUser_invalidRfc_throwsBadRequest() {
         User user = new User();
-        user.setName("Juan");
-        user.setTax_id("JUAN900101ABC");
-        user.setPhone("5512345678");
+        user.setTaxId("RFC-INVALIDO");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.saveUser(user));
+        assertEquals(400, ex.getStatusCode().value());
+    }
+
+    @Test
+    void saveUser_duplicateRfc_throwsBadRequest() {
+        userService.saveUser(buildUser("VAMI920425ABC", "5512345678"));
+
+        User duplicate = buildUser("VAMI920425ABC", "5599999999");
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.saveUser(duplicate));
+        assertEquals(400, ex.getStatusCode().value());
+    }
+
+    @Test
+    void saveUser_invalidPhone_throwsBadRequest() {
+        User user = buildUser("VAMI920425ABC", "123");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.saveUser(user));
+        assertEquals(400, ex.getStatusCode().value());
+    }
+
+    // -------------------------------------------------------------------------
+    // login
+    // -------------------------------------------------------------------------
+
+    @Test
+    void login_correctCredentials_returnsUser() {
+        User user = buildUser("LORE800101XYZ", "5512345678");
+        user.setPassword("mypassword");
+        userService.saveUser(user);
+
+        User result = userService.login("LORE800101XYZ", "mypassword");
+
+        assertEquals("LORE800101XYZ", result.getTaxId());
+    }
+
+    @Test
+    void login_wrongPassword_throwsUnauthorized() {
+        User user = buildUser("JUAN900101ABC", "5512345678");
         user.setPassword("correct_pass");
         userService.saveUser(user);
 
-        // Intento login con password incorrecto
-        assertThrows(ResponseStatusException.class, () -> {
-            userService.login("JUAN900101ABC", "wrong_pass");
-        });
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.login("JUAN900101ABC", "wrong_pass"));
+        assertEquals(401, ex.getStatusCode().value());
+    }
+
+    @Test
+    void login_unknownTaxId_throwsUnauthorized() {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.login("XXXX000000XXX", "any"));
+        assertEquals(401, ex.getStatusCode().value());
+    }
+
+    // -------------------------------------------------------------------------
+    // filterUsers
+    // -------------------------------------------------------------------------
+
+    @Test
+    void filterUsers_byNameContains_returnsMatch() {
+        List<User> result = userService.filterUsers("name co user1");
+
+        assertEquals(1, result.size());
+        assertEquals("user1", result.get(0).getName());
+    }
+
+    @Test
+    void filterUsers_byEmailEndsWith_returnsMatches() {
+        List<User> result = userService.filterUsers("email ew mail.com");
+
+        assertFalse(result.isEmpty());
+        assertTrue(result.stream().allMatch(u -> u.getEmail().endsWith("mail.com")));
+    }
+
+    @Test
+    void filterUsers_nullFilter_returnsAll() {
+        List<User> result = userService.filterUsers(null);
+
+        assertEquals(3, result.size());
+    }
+
+    @Test
+    void filterUsers_unknownField_returnsAll() {
+        List<User> result = userService.filterUsers("unknown eq value");
+
+        assertEquals(0, result.size());
+    }
+
+    // -------------------------------------------------------------------------
+    // sortUsers
+    // -------------------------------------------------------------------------
+
+    @Test
+    void sortUsers_byName_returnsAlphabeticalOrder() {
+        List<User> all = userService.getAllUsers();
+        List<User> sorted = userService.sortUsers(all, "name");
+
+        for (int i = 0; i < sorted.size() - 1; i++) {
+            assertTrue(sorted.get(i).getName().compareTo(sorted.get(i + 1).getName()) <= 0);
+        }
+    }
+
+    @Test
+    void sortUsers_nullSortedBy_returnsSameList() {
+        List<User> all = userService.getAllUsers();
+        List<User> result = userService.sortUsers(all, null);
+
+        assertEquals(all.size(), result.size());
+    }
+
+    // -------------------------------------------------------------------------
+    // updateUser
+    // -------------------------------------------------------------------------
+
+    @Test
+    void updateUser_existingUser_updatesFields() {
+        User existing = userService.getAllUsers().get(0);
+
+        User update = new User();
+        update.setEmail("nuevo@mail.com");
+
+        User updated = userService.updateUser(existing.getId(), update);
+
+        assertEquals("nuevo@mail.com", updated.getEmail());
+    }
+
+    @Test
+    void updateUser_nonExistentId_throwsNotFound() {
+        User update = new User();
+        update.setEmail("x@mail.com");
+
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.updateUser(java.util.UUID.randomUUID(), update));
+        assertEquals(404, ex.getStatusCode().value());
+    }
+
+    // -------------------------------------------------------------------------
+    // deleteUser
+    // -------------------------------------------------------------------------
+
+    @Test
+    void deleteUser_existingUser_removesFromList() {
+        User existing = userService.getAllUsers().get(0);
+        int sizeBefore = userService.getAllUsers().size();
+
+        userService.deleteUser(existing.getId());
+
+        assertEquals(sizeBefore - 1, userService.getAllUsers().size());
+    }
+
+    @Test
+    void deleteUser_nonExistentId_throwsNotFound() {
+        ResponseStatusException ex = assertThrows(ResponseStatusException.class,
+                () -> userService.deleteUser(java.util.UUID.randomUUID()));
+        assertEquals(404, ex.getStatusCode().value());
+    }
+
+    // -------------------------------------------------------------------------
+    // helpers
+    // -------------------------------------------------------------------------
+
+    private User buildUser(String taxId, String phone) {
+        User user = new User();
+        user.setName("Test User");
+        user.setEmail("test@mail.com");
+        user.setTaxId(taxId);
+        user.setPhone(phone);
+        user.setPassword("password123");
+        return user;
     }
 }

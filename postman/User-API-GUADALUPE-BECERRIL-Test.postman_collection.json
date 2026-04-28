@@ -221,8 +221,17 @@
       "request": {
         "method": "POST",
         "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"tax_id\":\"PEJU920425ABC\",\r\n\"password\":\"password123\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
         "url": {
-          "raw": "http://localhost:8080/login?tax_id=PEJU920425ABC&password=password123",
+          "raw": "http://localhost:8080/login",
           "protocol": "http",
           "host": [
             "localhost"
@@ -230,20 +239,37 @@
           "port": "8080",
           "path": [
             "login"
-          ],
-          "query": [
-            {
-              "key": "tax_id",
-              "value": "PEJU920425ABC"
-            },
-            {
-              "key": "password",
-              "value": "password123"
-            }
           ]
         }
       },
       "response": []
+    }
+  ],
+  "auth": {
+    "type": "basic"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "packages": {},
+        "requests": {},
+        "exec": [
+          ""
+        ]
+      }
     }
   ]
 }

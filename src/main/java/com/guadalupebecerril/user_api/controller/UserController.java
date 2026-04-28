@@ -3,7 +3,9 @@ package com.guadalupebecerril.user_api.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -26,13 +28,15 @@ import com.guadalupebecerril.user_api.service.UserService;
 @RequestMapping("/users")
 public class UserController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
 
-    // Crea un nuevo usuario en el sistema.
+    public UserController(UserService userService) {
+        this.userService = userService;
+    }
+
     @PostMapping
-    public User createUser(@RequestBody User user) {
-        return userService.saveUser(user);
+    public ResponseEntity<User> createUser(@RequestBody User user) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(userService.saveUser(user));
     }
 
     // Recupera una lista de usuarios con opciones de búsqueda y orden.
@@ -56,7 +60,8 @@ public class UserController {
 
     // Elimina de forma definitiva a un usuario del sistema.
     @DeleteMapping("/{id}")
-    public void deleteUser(@PathVariable UUID id) {
+    public ResponseEntity<Void> deleteUser(@PathVariable UUID id) {
         userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
     }
 }

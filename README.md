@@ -73,6 +73,12 @@ user-api/
 
 ---
 
+## Enlace de postman collection
+Para encontrar la coleccion en postman, tambien proporciono el enlace:
+    https://crimson-space-1421582.postman.co/workspace/b06cbbdf-75ec-4113-8167-cb3608974694/collection/54316529-38413582-78d7-402f-8fc8-a8807db7dedb?action=share&source=copy-link&creator=54316529
+
+---
+
 ## Repositorio del Proyecto
 Puedes encontrar el código fuente y el historial de cambios en:
         https://github.com/GpeBP/user-api

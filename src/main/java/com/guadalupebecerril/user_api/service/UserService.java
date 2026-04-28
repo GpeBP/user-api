@@ -12,6 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.ArrayList;
 import java.util.List;
@@ -28,13 +29,13 @@ import java.util.Comparator;
 public class UserService {
 
     // Repositorio en memoria para el almacenamiento de usuarios.
-    private final List<User> users = new ArrayList<>();
+    private final List<User> users = Collections.synchronizedList(new ArrayList<>());
 
     // Contador atómico para garantizar IDs de dirección únicos y thread-safe.
     private final AtomicInteger addressGlobalCounter = new AtomicInteger(1);
 
     // Método para obtener la fecha en formato Madagascar
-    public String getMadagascarTimestamp() {
+    private String getMadagascarTimestamp() {
         // Zona horaria de Madagascar: Indian/Antananarivo
         ZonedDateTime now = ZonedDateTime.now(ZoneId.of("Indian/Antananarivo"));
         // Formato: dd-mm-yyyy HH:mm
@@ -50,9 +51,9 @@ public class UserService {
             user.setName("user" + i);
             user.setEmail("user" + i + "@mail.com");
             user.setPhone("555555555" + i);
-            user.setTax_id("AARR990101XX" + i);
-            user.setPassword(SecurityUtil.encrypt("password" + i));
-            user.setCreated_at(getMadagascarTimestamp());
+            user.setTaxId("AARR990101XX" + i);
+            user.setPassword(SecurityUtil.hashPassword("password" + i));
+            user.setCreatedAt(getMadagascarTimestamp());
 
             Address address = new Address();
             address.setId(i);
@@ -68,13 +69,13 @@ public class UserService {
     // Método para registrar un nuevo usuario aplicando reglas de validación
     public User saveUser(User newUser) {
         // Valida formato de RFC
-        if (!ValidationUtil.isValidRFC(newUser.getTax_id())) {
+        if (!ValidationUtil.isValidRFC(newUser.getTaxId())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Formato de RFC (tax_id) inválido.");
         }
 
         // Valida que el RFC sea único
         boolean exists = users.stream()
-                .anyMatch(u -> u.getTax_id().equalsIgnoreCase(newUser.getTax_id()));
+                .anyMatch(u -> u.getTaxId().equalsIgnoreCase(newUser.getTaxId()));
         if (exists) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El tax_id ya existe.");
         }
@@ -94,11 +95,9 @@ public class UserService {
             }
         }
         newUser.setId(UUID.randomUUID());
-        newUser.setCreated_at(getMadagascarTimestamp());
+        newUser.setCreatedAt(getMadagascarTimestamp());
 
-        // Cifrado de la contraseña
-        String encryptedPassword = SecurityUtil.encrypt(newUser.getPassword());
-        newUser.setPassword(encryptedPassword);
+        newUser.setPassword(SecurityUtil.hashPassword(newUser.getPassword()));
 
         users.add(newUser);
         return newUser;
@@ -118,7 +117,7 @@ public class UserService {
         List<User> result = new ArrayList<>(users);
 
         for (String condition : conditions) {
-            String[] parts = condition.trim().split(" ");
+            String[] parts = condition.trim().split(" ", 3);
             if (parts.length < 3)
                 continue;
 
@@ -136,7 +135,7 @@ public class UserService {
                 } else if (field.equals("email")) {
                     fieldValue = (u.getEmail() == null) ? "" : u.getEmail().toLowerCase();
                 } else if (field.equals("tax_id")) {
-                    fieldValue = (u.getTax_id() == null) ? "" : u.getTax_id().toLowerCase();
+                    fieldValue = (u.getTaxId() == null) ? "" : u.getTaxId().toLowerCase();
                 } else if (field.equals("phone")) {
                     fieldValue = (u.getPhone() == null) ? "" : u.getPhone().replaceAll("[^0-9]", "");
                     searchToCompare = value.replaceAll("[^0-9]", "");
@@ -169,8 +168,8 @@ public class UserService {
             case "email" -> Comparator.comparing(User::getEmail, Comparator.nullsLast(String::compareTo));
             case "name" -> Comparator.comparing(User::getName, Comparator.nullsLast(String::compareTo));
             case "phone" -> Comparator.comparing(User::getPhone, Comparator.nullsLast(String::compareTo));
-            case "tax_id" -> Comparator.comparing(User::getTax_id, Comparator.nullsLast(String::compareTo));
-            case "created_at" -> Comparator.comparing(User::getCreated_at, Comparator.nullsLast(String::compareTo));
+            case "tax_id" -> Comparator.comparing(User::getTaxId, Comparator.nullsLast(String::compareTo));
+            case "created_at" -> Comparator.comparing(User::getCreatedAt, Comparator.nullsLast(String::compareTo));
             case "id" -> Comparator.comparing(user -> user.getId().toString());
             default -> null;
         };
@@ -196,8 +195,8 @@ public class UserService {
             user.setEmail(updateData.getEmail());
         if (updateData.getPhone() != null)
             user.setPhone(updateData.getPhone());
-        if (updateData.getTax_id() != null)
-            user.setTax_id(updateData.getTax_id());
+        if (updateData.getTaxId() != null)
+            user.setTaxId(updateData.getTaxId());
 
         return user;
     }
@@ -214,16 +213,13 @@ public class UserService {
     // password
     public User login(String taxId, String password) {
         User user = users.stream()
-                .filter(u -> u.getTax_id().equalsIgnoreCase(taxId))
+                .filter(u -> u.getTaxId().equalsIgnoreCase(taxId))
                 .findFirst()
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Usuario no encontrado"));
 
-        String encryptedInput = SecurityUtil.encrypt(password);
-
-        if (user.getPassword().equals(encryptedInput)) {
+        if (SecurityUtil.verifyPassword(password, user.getPassword())) {
             return user;
-        } else {
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Contraseña incorrecta");
         }
+        throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Contraseña incorrecta");
     }
 }

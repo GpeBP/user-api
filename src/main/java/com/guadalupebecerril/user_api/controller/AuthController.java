@@ -1,11 +1,11 @@
 package com.guadalupebecerril.user_api.controller;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.guadalupebecerril.user_api.dto.LoginRequest;
 import com.guadalupebecerril.user_api.service.UserService;
 
 /**
@@ -16,19 +16,20 @@ import com.guadalupebecerril.user_api.service.UserService;
 @RestController
 public class AuthController {
 
-    @Autowired
-    private UserService userService;
+    private final UserService userService;
+
+    public AuthController(UserService userService) {
+        this.userService = userService;
+    }
 
     // Endpoint para el inicio de sesión de usuarios.
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestParam String tax_id, @RequestParam String password) {
+    public ResponseEntity<?> login(@RequestBody LoginRequest request) {
         try {
-            var user = userService.login(tax_id, password);
+            var user = userService.login(request.getTaxId(), request.getPassword());
             return ResponseEntity.ok(user);
         } catch (Exception e) {
-            // Identificación de errores de credenciales (Usuario no encontrado o Contraseña
-            // incorrecta)
-            return ResponseEntity.status(401).body(e.getMessage());
+            return ResponseEntity.status(401).body("Credenciales inválidas.");
         }
     }
 }
