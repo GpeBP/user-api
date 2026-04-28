@@ -1,0 +1,249 @@
+{
+  "info": {
+    "_postman_id": "38413582-78d7-402f-8fc8-a8807db7dedb",
+    "name": "User-API-GUADALUPE-BECERRIL-Test",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "_exporter_id": "54316529",
+    "_collection_link": "https://go.postman.co/collection/54316529-38413582-78d7-402f-8fc8-a8807db7dedb?source=collection_link"
+  },
+  "item": [
+    {
+      "name": "Create user",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Juan Peréz\",\r\n    \"email\": \"juan_p@example.com\",\r\n    \"phone\": \"+52 55 1234 5678\",\r\n    \"tax_id\": \"PEJU920425ABC\",\r\n    \"password\": \"password123\",\r\n    \"addresses\": [\r\n        {\r\n            \"name\": \"Oficina\",\r\n            \"street\": \"Reforma 222\",\r\n            \"country_code\": \"MX\"\r\n        },\r\n        {\r\n            \"name\": \"Casa\",\r\n            \"street\": \"Insugentes2\",\r\n            \"country_code\": \"MX\"\r\n        }\r\n    ]\r\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/users",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Update user",
+      "request": {
+        "method": "PATCH",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\"email\": \"juanperez@mail.com\"}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "http://localhost:8080/users/0d14a933-0154-422c-9dba-e4a91a153177",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users",
+            "0d14a933-0154-422c-9dba-e4a91a153177"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "List sortedBy",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/users?sortedBy=name",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users"
+          ],
+          "query": [
+            {
+              "key": "sortedBy",
+              "value": "name"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filterable list ew",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/users?filter=email+ew+mail.com",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users"
+          ],
+          "query": [
+            {
+              "key": "filter",
+              "value": "email+ew+mail.com"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filterable list co",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/users?filter=name+co+Per",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users"
+          ],
+          "query": [
+            {
+              "key": "filter",
+              "value": "name+co+Per"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filterable list sw",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/users?filter=phone+sw+52",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users"
+          ],
+          "query": [
+            {
+              "key": "filter",
+              "value": "phone+sw+52"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Filterable list eq",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/users?filter=tax_id+eq+PEJU920425ABC",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users"
+          ],
+          "query": [
+            {
+              "key": "filter",
+              "value": "tax_id+eq+PEJU920425ABC"
+            }
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Delete user",
+      "request": {
+        "auth": {
+          "type": "noauth"
+        },
+        "method": "DELETE",
+        "header": [],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n    \"name\": \"Juan Peréz\",\r\n    \"email\": \"juan_p@example.com\",\r\n    \"phone\": \"+52 55 1234 5678\",\r\n    \"tax_id\": \"PEJU920425ABC\",\r\n    \"password\": \"password123\",\r\n    \"addresses\": [\r\n        {\r\n            \"name\": \"Oficina\",\r\n            \"street\": \"Reforma 222\",\r\n            \"country_code\": \"MX\"\r\n        },\r\n        {\r\n            \"name\": \"Casa\",\r\n            \"street\": \"Insugentes2\",\r\n            \"country_code\": \"MX\"\r\n        }\r\n    ]\r\n}"
+        },
+        "url": {
+          "raw": "http://localhost:8080/users/0d14a933-0154-422c-9dba-e4a91a153177",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "users",
+            "0d14a933-0154-422c-9dba-e4a91a153177"
+          ]
+        }
+      },
+      "response": []
+    },
+    {
+      "name": "Login",
+      "request": {
+        "method": "POST",
+        "header": [],
+        "url": {
+          "raw": "http://localhost:8080/login?tax_id=PEJU920425ABC&password=password123",
+          "protocol": "http",
+          "host": [
+            "localhost"
+          ],
+          "port": "8080",
+          "path": [
+            "login"
+          ],
+          "query": [
+            {
+              "key": "tax_id",
+              "value": "PEJU920425ABC"
+            },
+            {
+              "key": "password",
+              "value": "password123"
+            }
+          ]
+        }
+      },
+      "response": []
+    }
+  ]
+}
