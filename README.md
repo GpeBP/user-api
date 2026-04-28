@@ -32,11 +32,15 @@ API REST profesional desarrollada con **Java** y **Spring Boot 3** para la gesti
 ### Opción 1: Ejecutar con Docker
 Esta es la forma más sencilla de empaquetar y ejecutar la aplicación en un entorno aislado.
 
-1.  **Construir la imagen:**
+1. **Compilar el proyecto**
+    ```bash
+    mvn clean package -DskipTests
+    ```
+2.  **Construir la imagen:**
     ```bash
     docker build -t user-api .
     ```
-2.  **Ejecutar el contenedor:**
+3.  **Ejecutar el contenedor:**
     ```bash
     docker run -p 8080:8080 user-api
     ```
