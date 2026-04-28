@@ -12,7 +12,7 @@ import java.util.Base64;
  */
 public class SecurityUtil {
     // Llave de cifrado simétrico (256 bits).
-    private static final String SECRET_KEY = "Test_Secret_Key_2026_Java_Api";
+    private static final String SECRET_KEY = "Test_Gb_Secret_Key_2026_Java_Api";
 
     public static String encrypt(String strToEncrypt) {
         try {
